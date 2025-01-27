@@ -99,8 +99,8 @@ def list_expiration_of_licenses(source):
         response_object = session.post(url_object_order, json=data_object, headers=header).json()
         source_task = response_object['value']['source']
         name_object, number = inforamation_object(id_rk)
-        check_and_create_list_application(source_task, name_object, number)
-              
+        check_and_create_list_application(source_task, name_object, number)       
+        
 
 def check_and_create_list_application(source_task, name_object, number):
     list_application = []
@@ -154,7 +154,7 @@ def creat_list_order(list_application, num_order):
             response_application = session.post(url_application, json=data_application, headers=header).json()
             response_files = response_application['value']['files']
             link_file = creat_links_order(response_files, num_order)
-            return link_file            
+            return link_file           
             
 
 def creat_links_order(response_files, num_order):
@@ -212,7 +212,6 @@ def send_log():
     server.sendmail(send_from, send_to, msg.as_string())
     server.quit()
     print("Лог отрпавлен mva@solardsoft.ru")
-
-                              
+                               
 if __name__ == '__main__':
     main()
