@@ -16,8 +16,6 @@ import smtplib
 import datetime as dt
 import os
 
-# commit commit
-
 
 url = 'https://l.ucs.ru/ls5api/api/Auth/Login'
 url_object = 'https://l.ucs.ru/ls5api/api/Object/GetObjectById'
@@ -87,6 +85,7 @@ def main():
     source = response_objects['value']['source']
     list_expiration_of_licenses(source)
     send_log()
+    
 
 def list_expiration_of_licenses(source):
     for s in source:
@@ -101,28 +100,33 @@ def list_expiration_of_licenses(source):
         source_task = response_object['value']['source']
         name_object, number = inforamation_object(id_rk)
         check_and_create_list_application(source_task, name_object, number)
+              
 
 def check_and_create_list_application(source_task, name_object, number):
+    list_application = []
     for t in source_task:
         num_order = t['num']
         create_order = str(t['createdDate']).split("T")[0]
         create_order = datetime.strptime(create_order, '%Y-%m-%d') + timedelta(days=14)
         check = today < create_order
-        list_application = []
         if check:
             if t['paymentStatusName'] == "Не оплачена" and t["statusName"] == "Выставлен счет":
                 application = t['id']
                 list_application.append(application)
                 links_file = creat_list_order(list_application, num_order)
-                send_chek(links_file, name_object, number)
             elif t['paymentStatusName'] == "Полностью оплачена":
                 print(f'Счет #{num_order} для заведния {name_object} не прошел проверку по оплате')
         else:
             print(f'Счет #{num_order} для заведния {name_object} не прошел проверку по времени')
-            break    
+            break
+    try:    
+        send_chek(links_file, name_object, number)
+    except Exception as ex:
+        print(ex)
 
 
 def creat_list_order(list_application, num_order):
+    links_file = None
     if len(list_application) > 1:
         for application in list_application:
             data_application = {"RequestObject": 
@@ -134,8 +138,8 @@ def creat_list_order(list_application, num_order):
             response_application = session.post(url_application, json=data_application, headers=header).json()
             response_files = response_application['value']['files']
             link_file = creat_links_order(response_files, num_order)
-            if links_file != '':
-                links_file = links_file + ' ' + link_file
+            if links_file != None:
+                links_file = links_file + ' , ' + link_file
             else:
                 links_file = link_file
         return links_file
@@ -150,8 +154,7 @@ def creat_list_order(list_application, num_order):
             response_application = session.post(url_application, json=data_application, headers=header).json()
             response_files = response_application['value']['files']
             link_file = creat_links_order(response_files, num_order)
-            return link_file
-            
+            return link_file            
             
 
 def creat_links_order(response_files, num_order):
@@ -162,7 +165,6 @@ def creat_links_order(response_files, num_order):
             return link_file
     except:
         print(f'В заяввке {num_order} отсуттвует счет или его нет')
-
 
 
 def inforamation_object(id_rk):
@@ -179,11 +181,12 @@ def inforamation_object(id_rk):
     name_object = response_object['value']['name'] + " " + response_object['value']['code']
     return name_object, number
 
+
 def send_chek(links_file, name_object, number):
     file_url = (f'Здравствуйте, {name_object}! Напоминаю Вам об оплате услуг rkeeper.\n'
                 'Просьба оплатить счёт в ближайшее время во избежании блокировки программы.\n'
                 'Счёт находится по ссылке ниже.\n'
-                f'*сслыка(и) на счета:* {links_file}\n'
+                f'*сслыка(и) на счета:* {links_file} \n'
                 'Просьба отправить платёжное поручение после оплаты на почту pp@solardsoft.ru. Это ускорит процесс активации лицензий.\n'
                 'Если счёт уже оплачен, по возможности, отправьте платёжное поручение на почту.\n'
                 '_*Платёжные поручения, которые будут отправлены в ответном сообщении в WhatsApp не будут рассматриваться.*_\n'
@@ -191,7 +194,7 @@ def send_chek(links_file, name_object, number):
     for_email = f'Нет номера телефона! \n\n\n{file_url}'
     if number.startswith('7'):
         pywhatkit.sendwhatmsg_instantly(phone_no=f'+{number}', message=file_url, tab_close=True)
-        time.sleep(60)
+        time.sleep(6)
         pyautogui.press("enter")
         pyautogui.press("сtrl+f4")
         print(f'Отправлено клиенту {name_object}')
@@ -209,6 +212,7 @@ def send_log():
     server.sendmail(send_from, send_to, msg.as_string())
     server.quit()
     print("Лог отрпавлен mva@solardsoft.ru")
-                               
+
+                              
 if __name__ == '__main__':
     main()
