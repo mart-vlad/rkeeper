@@ -16,7 +16,6 @@ import smtplib
 import datetime as dt
 import os
 
-
 url = 'https://l.ucs.ru/ls5api/api/Auth/Login'
 url_object = 'https://l.ucs.ru/ls5api/api/Object/GetObjectById'
 url_objects = 'https://l.ucs.ru/ls5api/api/Object/GetObjectList'
